@@ -94,6 +94,7 @@ def play(players, rows=6, cols=7, board=None, fast=False, verbose=False, **kwarg
 
     # Play the game
     gameover = False
+    hardexit = False
     while not gameover:
         # Store player ID for easier verbose mode
         player_id = players['id'][current_player]
@@ -104,6 +105,7 @@ def play(players, rows=6, cols=7, board=None, fast=False, verbose=False, **kwarg
 
             key = gui.checkKey()
             if key == "Escape" or key == "Ctrl+e": # exit game
+                hardexit = True
                 break
             elif key == 'd': # debug
                 pdb.set_trace()
@@ -165,7 +167,7 @@ def play(players, rows=6, cols=7, board=None, fast=False, verbose=False, **kwarg
         if verbose: print(msg)
 
     # Wait for user to quit
-    while True:
+    while not hardexit:
         key = gui.checkKey()
         if key == "Escape" or key == "Ctrl+e": # exit game
             break
