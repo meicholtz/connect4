@@ -25,6 +25,7 @@ parser.add_argument('-r', '--rows', type=int, help="number of rows on the board 
 parser.add_argument('-c', '--cols', type=int, help="number of columns on the board (default=7)", default=7)
 parser.add_argument('-b', '--board', type=str, help="filename containing starting board state")
 parser.add_argument('--fast', action='store_true', help='flag to speed up the game by not using graphics (AI only)')
+parser.add_argument('--strict', action='store_true', help=f"enforce time limit of {TIMEOUT} seconds")
 parser.add_argument('--verbose', action='store_true', help="display game details")
 parser.add_argument('--version', action='version', version=utils.get_version())
 
@@ -39,7 +40,7 @@ def main(args):
     # Play the game
     play(players, **vars(args))
 
-def play(players, rows=6, cols=7, board=None, fast=False, verbose=False, **kwargs):
+def play(players, rows=6, cols=7, board=None, fast=False, strict=False, verbose=False, **kwargs):
     """Play a game of Connect Four.
 
     Parameters
@@ -137,9 +138,18 @@ def play(players, rows=6, cols=7, board=None, fast=False, verbose=False, **kwarg
             utils.status(gui, f"{player_id} is thinking...")
             if not fast: time.sleep(DELAY)
             try:
+                # Ask for move
+                t0 = time.time()
                 col = players['ai'][current_player].get_computer_move(deepcopy(board), current_player)
-                if verbose: print(f'\t{player_id} selects column {col}')
-                
+                t1 = time.time()
+                if verbose: print(f'\t{player_id} selects column {col} ({t1 - t0:0.3f} seconds)')
+
+                # Are we enforcing time limits?
+                if strict and (t1 - t0) > TIMEOUT:
+                    utils.status(gui, f"{player_id} took too long to move. You forfeit!")
+                    if verbose: print(f'\t{player_id} forfeits!')
+                    break
+
                 # Validate the move
                 col = col - 1 # convert to 0-indexing
                 if utils.is_valid(board, col):
